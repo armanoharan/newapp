@@ -1,0 +1,25 @@
+# Render Blueprint: one web service (REST API + MCP at /mcp) and a Postgres database.
+# Deploy: Render dashboard -> New -> Blueprint -> pick this repo.
+services:
+  - type: web
+    name: b2b-crm
+    runtime: docker
+    plan: free            # change to "starter" for an always-on instance
+    region: oregon
+    healthCheckPath: /health
+    autoDeploy: true      # redeploy on every push to the default branch
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: b2b-crm-db
+          property: connectionString
+      - key: API_KEY
+        generateValue: true   # Render generates a random key; copy it from the Environment tab
+
+databases:
+  - name: b2b-crm-db
+    plan: free
+    region: oregon
+    databaseName: crm
+    user: crm
+    ipAllowList: []       # only reachable from your Render services, not the internet

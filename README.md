@@ -8,42 +8,81 @@ A small CRM for a B2B software sales team with three constructs:
 | **Contacts** | 20 people (2 per company) | name, email, phone, title, `company_id` |
 | **Deals** | 18 deals across every pipeline stage | amount, stage, probability, close date, owner, product, `company_id`, `contact_id` |
 
-All companies and people are invented.
+All companies and people are invented. The sample data is loaded automatically the first time the app starts with an empty database.
+
+One app serves both:
+- the **REST API** (interactive docs at `/docs`)
+- the **MCP server** at `/mcp` (Streamable HTTP)
 
 ```
-api/          FastAPI REST API (in-memory store seeded from api/seed_data.py)
-mcp_server/   MCP server exposing the API as 18 tools
-tests/        API tests
+api/          FastAPI app, database models, service layer, API-key auth
+mcp_server/   MCP tools (served at /mcp, or over stdio for local use)
+tests/        API, auth and MCP tests
+Dockerfile    Container image (used by Render, Railway, Fly, ...)
+render.yaml   Render Blueprint: web service + Postgres
 ```
 
-## Setup
+## Deploy to Render
 
-Requires Python 3.10+. The quickest way (macOS/Linux):
+1. In the Render dashboard, click **New → Blueprint** and pick this repository.
+2. Click **Apply**. Render creates the web service and a Postgres database, generates an `API_KEY`, builds the Dockerfile, and deploys.
+3. Open the service's **Environment** tab and copy the value of `API_KEY`.
+
+Your app is then live at `https://<service-name>.onrender.com`:
+- `https://<service-name>.onrender.com/docs`: click **Authorize** and paste the key to try the API in your browser
+- `https://<service-name>.onrender.com/mcp`: the MCP endpoint
+
+Every push to `main` redeploys automatically.
+
+Free-plan notes: the web service sleeps after 15 minutes of inactivity, so the first request afterwards takes about 30 seconds. Render's free Postgres is deleted 30 days after creation unless you upgrade it. For always-on hosting with a database that's kept, change `plan: free` to `starter` (web) and `basic-256mb` (database) in `render.yaml`.
+
+### Configuration
+
+| Variable | Purpose |
+|----------|---------|
+| `DATABASE_URL` | Postgres connection string (set by the Blueprint). Defaults to a local SQLite file `crm.db`. |
+| `API_KEY` | Required on every request except `/`, `/health` and `/docs`. If unset, the app is open (local dev only). |
+| `ALLOWED_HOSTS` | Extra comma-separated hostnames the MCP endpoint accepts, e.g. a custom domain. Render's own hostname is added automatically. |
+
+## Authentication
+
+Send the key in one of these ways:
 
 ```bash
-./setup.sh
+curl -H "X-API-Key: $API_KEY" https://<service>.onrender.com/companies
 ```
-
-This finds Python 3.10+ (installing 3.12 with Homebrew if needed), creates `.venv`, installs dependencies and starts the API at http://localhost:8000/docs.
-
-Manual setup:
 
 ```bash
-python3.12 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+curl -H "Authorization: Bearer $API_KEY" https://<service>.onrender.com/companies
 ```
 
-## Run the API
+You can also append `?api_key=$API_KEY` to the URL, for clients that can't set headers. Prefer the headers when you can, because URLs often end up in logs.
+
+## Connect the hosted MCP server
+
+**Claude Code:**
 
 ```bash
-uvicorn api.main:app --reload --port 8000
+claude mcp add --transport http b2b-crm https://<service>.onrender.com/mcp --header "X-API-Key: <your key>"
 ```
 
-Interactive docs: http://localhost:8000/docs
+**Claude.ai / Claude Desktop (custom connector):** add a custom connector with the URL `https://<service>.onrender.com/mcp?api_key=<your key>`.
 
-Data lives in memory and resets to the sample data on every restart.
+### Tools
 
-### Endpoints
+| Companies | Contacts | Deals |
+|-----------|----------|-------|
+| `list_companies` | `list_contacts` | `list_deals` |
+| `get_company` | `get_contact` | `get_deal` |
+| `get_company_contacts` | `create_contact` | `get_pipeline_summary` |
+| `get_company_deals` | `update_contact` | `create_deal` |
+| `create_company` | `delete_contact` | `update_deal` |
+| `update_company` | | `delete_deal` |
+| `delete_company` | | |
+
+Errors such as "Company 999 not found" or invalid input come back to the model as tool errors.
+
+## REST endpoints
 
 **Companies**
 - `GET /companies`: filters `q`, `industry`, `country`, `min_employees`, `limit`, `offset`
@@ -63,64 +102,44 @@ Data lives in memory and resets to the sample data on every restart.
 Stages: `prospecting`, `qualification`, `proposal`, `negotiation`, `closed_won`, `closed_lost`.
 Moving a deal to `closed_won` or `closed_lost` sets its probability to 100 or 0. The API checks that each `company_id` exists and that a deal's contact works at the deal's company.
 
-```bash
-curl "localhost:8000/deals?stage=negotiation&min_amount=200000"
-curl -X PATCH localhost:8000/deals/11 -H 'content-type: application/json' -d '{"stage":"closed_won"}'
-```
+## Run locally
 
-## Run the MCP server
-
-The MCP server calls the REST API, so start the API first. Set `CRM_API_URL` if the API is not at `http://localhost:8000`.
-
-**stdio** (Claude Desktop, Claude Code, etc.):
+Requires Python 3.10+. On macOS or Linux:
 
 ```bash
-python -m mcp_server
+./setup.sh
 ```
 
-**Streamable HTTP** (served at `http://127.0.0.1:8001/mcp`):
+This finds Python 3.10+ (installing 3.12 with Homebrew if needed), creates `.venv`, installs dependencies and starts the app at http://localhost:8000/docs. Data is stored in `crm.db`. Delete that file to reset to the sample data.
+
+Manual setup:
 
 ```bash
-python -m mcp_server --http --port 8001
+python3.12 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn api.main:app --reload --port 8000
 ```
 
-### Add it to Claude Code
+To use the MCP server locally over stdio (no web server needed), run this from the repo root:
 
 ```bash
-claude mcp add b2b-crm -e CRM_API_URL=http://localhost:8000 -- python -m mcp_server
+claude mcp add b2b-crm -- "$(pwd)/.venv/bin/python" -m mcp_server
 ```
 
-Run that from the repo root. For Claude Desktop, add this to `claude_desktop_config.json`:
+Or run it with Docker:
 
-```json
-{
-  "mcpServers": {
-    "b2b-crm": {
-      "command": "python",
-      "args": ["-m", "mcp_server"],
-      "cwd": "/path/to/b2b-crm",
-      "env": { "CRM_API_URL": "http://localhost:8000" }
-    }
-  }
-}
+```bash
+docker build -t b2b-crm . && docker run -p 8000:8000 -e API_KEY=changeme b2b-crm
 ```
-
-### Tools
-
-| Companies | Contacts | Deals |
-|-----------|----------|-------|
-| `list_companies` | `list_contacts` | `list_deals` |
-| `get_company` | `get_contact` | `get_deal` |
-| `get_company_contacts` | `create_contact` | `get_pipeline_summary` |
-| `get_company_deals` | `update_contact` | `create_deal` |
-| `create_company` | `delete_contact` | `update_deal` |
-| `update_company` | | `delete_deal` |
-| `delete_company` | | |
-
-Errors from the API (such as "Company 999 not found") come back to the model as tool errors.
 
 ## Tests
 
 ```bash
 pytest -q
+```
+
+To run the tests against Postgres instead of in-memory SQLite:
+
+```bash
+TEST_DATABASE_URL=postgresql://user@localhost/crm_test pytest -q
 ```

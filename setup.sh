@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # One-step setup for macOS/Linux: finds (or installs) Python 3.10+,
-# creates .venv, installs dependencies, and starts the API.
+# creates .venv, installs dependencies, and starts the app (REST API + MCP at /mcp).
 set -euo pipefail
 cd "$(dirname "$0")"
 
@@ -44,8 +44,8 @@ fi
 
 echo
 echo "Setup complete."
-echo "  Add the MCP server to Claude Code:"
-echo "    claude mcp add b2b-crm -e CRM_API_URL=http://localhost:8000 -- \"$(pwd)/.venv/bin/python\" -m mcp_server"
+echo "  Add the MCP server to Claude Code (stdio, uses the local crm.db):"
+echo "    claude mcp add b2b-crm -- \"$(pwd)/.venv/bin/python\" -m mcp_server"
 echo
 echo "Starting the API at http://localhost:8000/docs  (Ctrl+C to stop)"
 exec .venv/bin/python -m uvicorn api.main:app --port 8000
