@@ -10,11 +10,13 @@ A small CRM for a B2B software sales team with three constructs:
 
 All companies and people are invented. The sample data is loaded automatically the first time the app starts with an empty database.
 
-One app serves both:
+One app serves all of:
+- the **web UI** at `/`: dashboard, a drag-and-drop deals board, and companies and contacts with create, edit and delete
 - the **REST API** (interactive docs at `/docs`)
 - the **MCP server** at `/mcp` (Streamable HTTP)
 
 ```
+api/static/   Web UI (single page, no build step)
 api/          FastAPI app, database models, service layer, API-key auth
 mcp_server/   MCP tools (served at /mcp, or over stdio for local use)
 tests/        API, auth and MCP tests
@@ -29,6 +31,7 @@ render.yaml   Render Blueprint: web service + Postgres
 3. Open the service's **Environment** tab and copy the value of `API_KEY`.
 
 Your app is then live at `https://<service-name>.onrender.com`:
+- `https://<service-name>.onrender.com/`: the web UI. Sign in with the API key; it's remembered in that browser until you sign out.
 - `https://<service-name>.onrender.com/docs`: click **Authorize** and paste the key to try the API in your browser
 - `https://<service-name>.onrender.com/mcp`: the MCP endpoint
 
@@ -41,7 +44,7 @@ Free-plan notes: the web service sleeps after 15 minutes of inactivity, so the f
 | Variable | Purpose |
 |----------|---------|
 | `DATABASE_URL` | Postgres connection string (set by the Blueprint). Defaults to a local SQLite file `crm.db`. |
-| `API_KEY` | Required on every request except `/`, `/health` and `/docs`. If unset, the app is open (local dev only). |
+| `API_KEY` | Required on every request except the UI page (`/`), `/health` and `/docs`. If unset, the app is open (local dev only). |
 | `ALLOWED_HOSTS` | Extra comma-separated hostnames the MCP endpoint accepts, e.g. a custom domain. Render's own hostname is added automatically. |
 
 ## Authentication

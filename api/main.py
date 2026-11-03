@@ -6,7 +6,9 @@ from contextlib import asynccontextmanager
 from datetime import date
 
 from fastapi import APIRouter, FastAPI, HTTPException, Query, Request, Response, Security
-from fastapi.responses import JSONResponse
+from pathlib import Path
+
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.security import APIKeyHeader
 
 from mcp_server.server import mcp, mcp_http_app
@@ -58,9 +60,18 @@ async def _invalid(_: Request, exc: service.Invalid):
     return JSONResponse(status_code=422, content={"detail": str(exc)})
 
 
-@app.get("/", tags=["meta"])
-def root() -> dict:
-    return {"service": "b2b-crm", "docs": "/docs", "mcp": "/mcp",
+UI_FILE = Path(__file__).parent / "static" / "index.html"
+
+
+@app.get("/", include_in_schema=False)
+def ui() -> FileResponse:
+    """The web UI. It's public; every API call it makes sends the API key."""
+    return FileResponse(UI_FILE, headers={"Cache-Control": "no-cache"})
+
+
+@app.get("/api", tags=["meta"])
+def api_info() -> dict:
+    return {"service": "b2b-crm", "ui": "/", "docs": "/docs", "mcp": "/mcp",
             "resources": ["/companies", "/contacts", "/deals"]}
 
 

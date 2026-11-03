@@ -1,0 +1,757 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>B2B CRM</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234f46e5'/%3E%3Cpath d='M9 21V11h5.5a3 3 0 0 1 0 6H9m5.5 0 3.5 4' stroke='white' stroke-width='2.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+:root {
+  --bg: #f6f7f9; --surface: #ffffff; --surface-2: #f1f3f6; --border: #e3e6eb;
+  --text: #16181d; --muted: #646b78; --accent: #4f46e5; --accent-text: #ffffff;
+  --accent-soft: #eef0ff; --danger: #c7362f; --danger-soft: #fdeceb; --ok: #18794e; --ok-soft: #e6f6ee;
+  --warn: #9a5b00; --warn-soft: #fff4e0; --shadow: 0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.08);
+  --radius: 10px;
+  --s-prospecting: #8b93a1; --s-qualification: #3b82f6; --s-proposal: #8b5cf6;
+  --s-negotiation: #e08a00; --s-closed_won: #18a058; --s-closed_lost: #d64545;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1115; --surface: #171a20; --surface-2: #1e222a; --border: #2a2f39;
+    --text: #e8eaee; --muted: #9aa1ad; --accent: #8b85ff; --accent-text: #0f1115;
+    --accent-soft: #24233d; --danger: #ff7b72; --danger-soft: #3a1d1d; --ok: #4ccf8a; --ok-soft: #16301f;
+    --warn: #f0b44c; --warn-soft: #3a2c12; --shadow: 0 1px 2px rgba(0,0,0,.4);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1115; --surface: #171a20; --surface-2: #1e222a; --border: #2a2f39;
+  --text: #e8eaee; --muted: #9aa1ad; --accent: #8b85ff; --accent-text: #0f1115;
+  --accent-soft: #24233d; --danger: #ff7b72; --danger-soft: #3a1d1d; --ok: #4ccf8a; --ok-soft: #16301f;
+  --warn: #f0b44c; --warn-soft: #3a2c12; --shadow: 0 1px 2px rgba(0,0,0,.4);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg); color: var(--text);
+  font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+a { color: var(--accent); text-decoration: none; }
+.hidden { display: none !important; }
+
+/* Layout */
+header.top {
+  position: sticky; top: 0; z-index: 10; background: var(--surface); border-bottom: 1px solid var(--border);
+}
+.top-inner { max-width: 1280px; margin: 0 auto; padding: 0 16px; display: flex; align-items: center; gap: 20px; height: 56px; }
+.brand { display: flex; align-items: center; gap: 8px; font-weight: 650; font-size: 15px; white-space: nowrap; }
+.brand-mark { width: 26px; height: 26px; border-radius: 7px; background: var(--accent); color: var(--accent-text);
+  display: grid; place-items: center; font-size: 13px; font-weight: 700; }
+nav.tabs { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; flex: 1; }
+nav.tabs a { padding: 7px 12px; border-radius: 8px; color: var(--muted); font-weight: 520; white-space: nowrap; }
+nav.tabs a:hover { background: var(--surface-2); color: var(--text); }
+nav.tabs a.active { background: var(--accent-soft); color: var(--accent); }
+main { max-width: 1280px; margin: 0 auto; padding: 24px 16px 64px; }
+.page-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
+.page-head h1 { font-size: 20px; margin: 0; font-weight: 650; letter-spacing: -.01em; }
+.toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+/* Controls */
+.btn { border: 1px solid var(--border); background: var(--surface); padding: 7px 12px; border-radius: 8px;
+  cursor: pointer; font-weight: 520; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.btn:hover { background: var(--surface-2); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+.btn.primary:hover { filter: brightness(1.07); }
+.btn.danger { color: var(--danger); }
+.btn.danger:hover { background: var(--danger-soft); }
+.btn.ghost { border-color: transparent; background: transparent; color: var(--muted); }
+.btn.ghost:hover { background: var(--surface-2); color: var(--text); }
+.btn:disabled { opacity: .55; cursor: default; }
+input[type=text], input[type=search], input[type=email], input[type=number], input[type=date], input[type=password], select, textarea {
+  border: 1px solid var(--border); background: var(--surface); border-radius: 8px; padding: 7px 10px; min-width: 0; width: 100%;
+}
+input:focus, select:focus, textarea:focus, .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+.toolbar input, .toolbar select { width: auto; }
+.toolbar input[type=search] { width: 220px; }
+
+/* Cards & KPIs */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+.card h2 { font-size: 14px; margin: 0; padding: 14px 16px; border-bottom: 1px solid var(--border); font-weight: 620; }
+.card .body { padding: 16px; }
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+.kpi { padding: 16px; }
+.kpi .label { color: var(--muted); font-size: 12.5px; font-weight: 520; }
+.kpi .value { font-size: 26px; font-weight: 680; letter-spacing: -.02em; margin-top: 4px; font-variant-numeric: tabular-nums; }
+.kpi .sub { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+.grid-2 { display: grid; grid-template-columns: 1.3fr 1fr; gap: 16px; }
+
+/* Stage bars */
+.stage-row { display: grid; grid-template-columns: 120px 1fr 92px; gap: 12px; align-items: center; padding: 7px 0; }
+.stage-row .bar { height: 10px; background: var(--surface-2); border-radius: 99px; overflow: hidden; }
+.stage-row .bar > span { display: block; height: 100%; border-radius: 99px; }
+.stage-row .amt { text-align: right; font-variant-numeric: tabular-nums; font-weight: 560; }
+.stage-row .cnt { color: var(--muted); font-weight: 400; font-size: 12px; }
+
+/* Pills */
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px; border-radius: 99px; font-size: 12px;
+  font-weight: 560; background: var(--surface-2); color: var(--text); white-space: nowrap; }
+.dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+
+/* Tables */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+th { font-size: 12px; color: var(--muted); font-weight: 560; background: var(--surface); position: sticky; top: 0; }
+tbody tr { cursor: pointer; }
+tbody tr:hover { background: var(--surface-2); }
+tbody tr:last-child td { border-bottom: none; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+td .strong { font-weight: 580; }
+td .faint { color: var(--muted); font-size: 12.5px; }
+.empty { padding: 36px 16px; text-align: center; color: var(--muted); }
+
+/* Board */
+.board { display: grid; grid-template-columns: repeat(6, minmax(178px, 1fr)); gap: 12px; overflow-x: auto; padding-bottom: 8px; }
+.col { background: var(--surface-2); border-radius: var(--radius); padding: 10px; min-height: 200px; display: flex; flex-direction: column; gap: 8px; border: 1px solid transparent; }
+.col.drop { border-color: var(--accent); background: var(--accent-soft); }
+.col-head { display: flex; justify-content: space-between; align-items: baseline; padding: 2px 4px 6px; }
+.col-head .t { font-weight: 620; display: flex; align-items: center; gap: 7px; }
+.col-head .s { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.deal-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 11px; cursor: grab; box-shadow: var(--shadow); }
+.deal-card:hover { border-color: var(--accent); }
+.deal-card.dragging { opacity: .45; }
+.deal-card .n { font-weight: 580; margin-bottom: 4px; }
+.deal-card .meta { display: flex; justify-content: space-between; color: var(--muted); font-size: 12.5px; gap: 8px; }
+.deal-card .amt { color: var(--text); font-weight: 620; font-variant-numeric: tabular-nums; }
+.deal-card .meta span:last-child { white-space: nowrap; }
+.deal-card .meta span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Detail */
+.detail-head { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; flex-wrap: wrap; margin-bottom: 16px; }
+.detail-head h1 { margin: 0 0 4px; font-size: 22px; }
+.facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border); border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); margin-bottom: 16px; }
+.facts > div { background: var(--surface); padding: 12px 14px; }
+.facts .label { color: var(--muted); font-size: 12px; }
+.facts .v { font-weight: 600; margin-top: 2px; }
+.back { display: inline-flex; gap: 6px; color: var(--muted); margin-bottom: 12px; }
+.back:hover { color: var(--text); }
+
+/* Modal */
+.overlay { position: fixed; inset: 0; background: rgba(10,12,16,.45); display: grid; place-items: center; z-index: 50; padding: 16px; }
+.modal { background: var(--surface); border-radius: 12px; width: min(560px, 100%); max-height: calc(100vh - 32px); overflow: auto; box-shadow: 0 20px 50px rgba(0,0,0,.25); }
+.modal header { padding: 16px 18px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.modal header h3 { margin: 0; font-size: 16px; }
+.modal form { padding: 16px 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px 14px; }
+.modal label { display: flex; flex-direction: column; gap: 5px; font-size: 12.5px; color: var(--muted); font-weight: 520; }
+.modal label.full { grid-column: 1 / -1; }
+.modal footer { padding: 14px 18px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; }
+.modal footer .spacer { flex: 1; }
+.form-error { grid-column: 1 / -1; background: var(--danger-soft); color: var(--danger); padding: 8px 10px; border-radius: 8px; font-size: 13px; }
+
+/* Login */
+.login { min-height: 100vh; display: grid; place-items: center; padding: 16px; }
+.login .card { width: min(400px, 100%); padding: 28px; }
+.login h1 { font-size: 20px; margin: 14px 0 4px; }
+.login p { color: var(--muted); margin: 0 0 18px; }
+.login form { display: grid; gap: 12px; }
+
+/* Toast */
+#toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 60; padding: 10px 16px;
+  border-radius: 9px; background: var(--text); color: var(--bg); font-weight: 520; box-shadow: 0 8px 24px rgba(0,0,0,.2);
+  max-width: calc(100vw - 32px); }
+#toast.err { background: var(--danger); color: #fff; }
+
+.muted { color: var(--muted); }
+.loading { padding: 40px; text-align: center; color: var(--muted); }
+
+@media (max-width: 900px) {
+  .kpis { grid-template-columns: repeat(2, 1fr); }
+  .grid-2 { grid-template-columns: 1fr; }
+  .facts { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 560px) {
+  .top-inner { flex-wrap: wrap; height: auto; padding-top: 10px; gap: 6px 10px; }
+  .brand { flex: 1; }
+  nav.tabs { order: 3; flex-basis: 100%; margin: 0 -4px; padding-bottom: 8px; }
+  main { padding-top: 18px; }
+  .modal form { grid-template-columns: 1fr; }
+  .toolbar input[type=search] { width: 100%; }
+  .toolbar { width: 100%; }
+  .stage-row { grid-template-columns: 96px 1fr 76px; gap: 8px; }
+  .kpi .value { font-size: 21px; }
+}
+</style>
+</head>
+<body>
+
+<div id="login" class="login hidden">
+  <div class="card">
+    <div class="brand-mark" style="width:36px;height:36px;font-size:16px">R</div>
+    <h1>Sign in to B2B CRM</h1>
+    <p>Enter the API key for this app. On Render it's under your service's <b>Environment</b> tab as <code>API_KEY</code>.</p>
+    <form id="login-form">
+      <input id="login-key" type="password" placeholder="API key" autocomplete="current-password" required>
+      <div id="login-error" class="form-error hidden"></div>
+      <button class="btn primary" type="submit" style="justify-content:center">Sign in</button>
+    </form>
+  </div>
+</div>
+
+<div id="shell" class="hidden">
+  <header class="top">
+    <div class="top-inner">
+      <div class="brand"><div class="brand-mark">R</div><span class="txt">B2B CRM</span></div>
+      <nav class="tabs" id="tabs">
+        <a href="#/dashboard" data-tab="dashboard">Dashboard</a>
+        <a href="#/deals" data-tab="deals">Deals</a>
+        <a href="#/companies" data-tab="companies">Companies</a>
+        <a href="#/contacts" data-tab="contacts">Contacts</a>
+      </nav>
+      <button class="btn ghost" id="theme-btn" title="Toggle light/dark" aria-label="Toggle light/dark theme"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor"/></svg></button>
+      <button class="btn ghost" id="signout-btn">Sign out</button>
+    </div>
+  </header>
+  <main id="view"></main>
+</div>
+
+<div id="toast" class="hidden" role="status"></div>
+
+<script>
+"use strict";
+// ------------------------------------------------------------------ state
+const STAGES = [
+  ["prospecting", "Prospecting"], ["qualification", "Qualification"], ["proposal", "Proposal"],
+  ["negotiation", "Negotiation"], ["closed_won", "Closed won"], ["closed_lost", "Closed lost"],
+];
+const STAGE_LABEL = Object.fromEntries(STAGES);
+const OPEN = new Set(["prospecting", "qualification", "proposal", "negotiation"]);
+const KEY_STORE = "crm_api_key";
+let apiKey = null;
+let cache = { companies: null, contacts: null };
+
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+  del(k) { try { localStorage.removeItem(k); } catch {} },
+};
+
+// ------------------------------------------------------------------ helpers
+const $ = (sel, el = document) => el.querySelector(sel);
+const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const money = (n) => "$" + Number(n || 0).toLocaleString("en-US");
+const moneyShort = (n) => {
+  n = Number(n || 0);
+  if (n >= 1e9) return "$" + (n / 1e9).toFixed(1).replace(/\.0$/, "") + "B";
+  if (n >= 1e6) return "$" + (n / 1e6).toFixed(n >= 1e7 ? 0 : 1).replace(/\.0$/, "") + "M";
+  if (n >= 1e3) return "$" + Math.round(n / 1e3) + "K";
+  return "$" + n;
+};
+const fmtDate = (d) => d ? new Date(d + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "";
+const daysUntil = (d) => Math.round((new Date(d + "T00:00:00") - new Date(new Date().toDateString())) / 864e5);
+const stagePill = (s) => `<span class="pill"><span class="dot" style="background:var(--s-${s})"></span>${esc(STAGE_LABEL[s] || s)}</span>`;
+
+function toast(msg, isErr = false) {
+  const t = $("#toast");
+  t.textContent = msg; t.className = isErr ? "err" : "";
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.add("hidden"), 3200);
+}
+
+class ApiError extends Error { constructor(status, msg) { super(msg); this.status = status; } }
+
+async function api(method, path, body) {
+  const res = await fetch(path, {
+    method,
+    headers: { "X-API-Key": apiKey || "", ...(body ? { "Content-Type": "application/json" } : {}) },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (res.status === 401) { signOut("Your API key was rejected. Please sign in again."); throw new ApiError(401, "Unauthorized"); }
+  if (!res.ok) {
+    let msg = res.statusText;
+    try {
+      const j = await res.json();
+      msg = Array.isArray(j.detail) ? j.detail.map((e) => `${e.loc.slice(-1)[0]}: ${e.msg}`).join("; ") : (j.detail || msg);
+    } catch {}
+    throw new ApiError(res.status, msg);
+  }
+  return res.status === 204 ? null : res.json();
+}
+
+async function loadRefs(force = false) {
+  if (force || !cache.companies) cache.companies = await api("GET", "/companies?limit=500");
+  if (force || !cache.contacts) cache.contacts = await api("GET", "/contacts?limit=500");
+  return cache;
+}
+const invalidate = () => { cache = { companies: null, contacts: null }; };
+const companyName = (id) => cache.companies?.find((c) => c.id === id)?.name || `#${id}`;
+const contactName = (id) => { const c = cache.contacts?.find((x) => x.id === id); return c ? `${c.first_name} ${c.last_name}` : ""; };
+
+// ------------------------------------------------------------------ auth
+async function tryKey(key) {
+  const res = await fetch("/companies?limit=1", { headers: { "X-API-Key": key } });
+  return res.ok;
+}
+function showLogin(msg) {
+  $("#shell").classList.add("hidden"); $("#login").classList.remove("hidden");
+  const err = $("#login-error");
+  err.textContent = msg || ""; err.classList.toggle("hidden", !msg);
+  setTimeout(() => $("#login-key").focus(), 0);
+}
+function signOut(msg) { apiKey = null; store.del(KEY_STORE); invalidate(); showLogin(msg); }
+$("#login-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const key = $("#login-key").value.trim();
+  const btn = e.submitter; btn.disabled = true;
+  try {
+    if (await tryKey(key)) { apiKey = key; store.set(KEY_STORE, key); $("#login-key").value = ""; start(); }
+    else showLogin("That key didn't work. Check it and try again.");
+  } catch { showLogin("Couldn't reach the server. If it's on Render's free plan it may be waking up; try again in 30 seconds."); }
+  finally { btn.disabled = false; }
+});
+$("#signout-btn").addEventListener("click", () => signOut());
+
+// theme
+const THEME_STORE = "crm_theme";
+function applyTheme(t) { if (t) document.documentElement.dataset.theme = t; else delete document.documentElement.dataset.theme; }
+applyTheme(store.get(THEME_STORE));
+$("#theme-btn").addEventListener("click", () => {
+  const dark = document.documentElement.dataset.theme
+    ? document.documentElement.dataset.theme === "dark"
+    : matchMedia("(prefers-color-scheme: dark)").matches;
+  const next = dark ? "light" : "dark"; applyTheme(next); store.set(THEME_STORE, next);
+});
+
+// ------------------------------------------------------------------ modal forms
+function openForm({ title, fields, values = {}, submitLabel = "Save", onSubmit, onDelete }) {
+  const ov = document.createElement("div");
+  ov.className = "overlay";
+  const inputs = fields.map((f) => {
+    const v = values[f.name] ?? f.default ?? "";
+    const req = f.required ? "required" : "";
+    let control;
+    if (f.type === "select") {
+      control = `<select name="${f.name}" ${req}>${f.allowEmpty ? `<option value="">${esc(f.emptyLabel || "None")}</option>` : ""}${
+        f.options.map(([val, lab]) => `<option value="${esc(val)}" ${String(val) === String(v) ? "selected" : ""}>${esc(lab)}</option>`).join("")}</select>`;
+    } else if (f.type === "textarea") {
+      control = `<textarea name="${f.name}" rows="3" ${req}>${esc(v)}</textarea>`;
+    } else {
+      control = `<input name="${f.name}" type="${f.type || "text"}" value="${esc(v)}" ${req} ${f.min != null ? `min="${f.min}"` : ""} ${f.max != null ? `max="${f.max}"` : ""}>`;
+    }
+    return `<label class="${f.full ? "full" : ""}">${esc(f.label)}${control}</label>`;
+  }).join("");
+  ov.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-label="${esc(title)}">
+    <header><h3>${esc(title)}</h3><button class="btn ghost" data-close aria-label="Close">✕</button></header>
+    <form novalidate>${inputs}<div class="form-error hidden"></div></form>
+    <footer>${onDelete ? `<button class="btn danger" data-delete type="button">Delete</button><span class="spacer"></span>` : ""}
+      <button class="btn" data-close type="button">Cancel</button>
+      <button class="btn primary" data-submit type="button">${esc(submitLabel)}</button></footer></div>`;
+  document.body.appendChild(ov);
+  const form = $("form", ov), errBox = $(".form-error", ov);
+  const close = () => { ov.remove(); document.removeEventListener("keydown", onKey); };
+  const onKey = (e) => { if (e.key === "Escape") close(); };
+  document.addEventListener("keydown", onKey);
+  ov.addEventListener("mousedown", (e) => { if (e.target === ov) close(); });
+  ov.querySelectorAll("[data-close]").forEach((b) => b.addEventListener("click", close));
+  const fail = (msg) => { errBox.textContent = msg; errBox.classList.remove("hidden"); };
+
+  // optional dependent field hook (e.g. contact list filtered by company)
+  fields.forEach((f) => f.onChange && form.elements[f.name].addEventListener("change", () => f.onChange(form)));
+  fields.forEach((f) => f.onChange && f.onChange(form, true));
+
+  const submit = async () => {
+    if (!form.reportValidity()) return;
+    const data = {};
+    for (const f of fields) {
+      let v = form.elements[f.name].value.trim();
+      if (f.type === "number") v = v === "" ? null : Number(v);
+      else if (f.int) v = v === "" ? null : Number(v);
+      else if (v === "" && f.nullable) v = null;
+      data[f.name] = v;
+    }
+    const btn = $("[data-submit]", ov); btn.disabled = true;
+    try { await onSubmit(data); close(); }
+    catch (e) { if (e.status !== 401) fail(e.message); }
+    finally { btn.disabled = false; }
+  };
+  $("[data-submit]", ov).addEventListener("click", submit);
+  form.addEventListener("submit", (e) => { e.preventDefault(); submit(); });
+  if (onDelete) $("[data-delete]", ov).addEventListener("click", async () => {
+    try { if (await onDelete()) close(); } catch (e) { if (e.status !== 401) fail(e.message); }
+  });
+  setTimeout(() => form.elements[0]?.focus(), 0);
+}
+
+const companyOptions = () => cache.companies.map((c) => [c.id, c.name]).sort((a, b) => a[1].localeCompare(b[1]));
+
+function companyForm(existing, after) {
+  openForm({
+    title: existing ? `Edit ${existing.name}` : "New company",
+    values: existing || {},
+    submitLabel: existing ? "Save changes" : "Create company",
+    fields: [
+      { name: "name", label: "Name", required: true, full: true },
+      { name: "domain", label: "Domain", required: true },
+      { name: "industry", label: "Industry", required: true },
+      { name: "employees", label: "Employees", type: "number", min: 1, required: true },
+      { name: "annual_revenue_usd", label: "Annual revenue (USD)", type: "number", min: 0, required: true },
+      { name: "hq_city", label: "HQ city", required: true },
+      { name: "country", label: "Country", required: true },
+      { name: "description", label: "Description", type: "textarea", full: true },
+    ],
+    onSubmit: async (d) => {
+      const saved = existing ? await api("PATCH", `/companies/${existing.id}`, d) : await api("POST", "/companies", d);
+      invalidate(); toast(existing ? "Company updated" : "Company created"); after?.(saved);
+    },
+    onDelete: existing && (async () => {
+      const deals = await api("GET", `/companies/${existing.id}/deals`);
+      const people = await api("GET", `/companies/${existing.id}/contacts`);
+      const extra = deals.length || people.length ? `\n\nThis also deletes ${people.length} contact(s) and ${deals.length} deal(s).` : "";
+      if (!confirm(`Delete ${existing.name}?${extra}`)) return false;
+      await api("DELETE", `/companies/${existing.id}?cascade=true`);
+      invalidate(); toast("Company deleted"); location.hash = "#/companies"; return true;
+    }),
+  });
+}
+
+function contactForm(existing, presetCompany, after) {
+  openForm({
+    title: existing ? `Edit ${existing.first_name} ${existing.last_name}` : "New contact",
+    values: existing || { company_id: presetCompany },
+    submitLabel: existing ? "Save changes" : "Create contact",
+    fields: [
+      { name: "first_name", label: "First name", required: true },
+      { name: "last_name", label: "Last name", required: true },
+      { name: "email", label: "Email", type: "email", required: true, full: true },
+      { name: "title", label: "Title", required: true },
+      { name: "phone", label: "Phone" },
+      { name: "company_id", label: "Company", type: "select", int: true, required: true, full: true, options: companyOptions() },
+    ],
+    onSubmit: async (d) => {
+      const saved = existing ? await api("PATCH", `/contacts/${existing.id}`, d) : await api("POST", "/contacts", d);
+      invalidate(); toast(existing ? "Contact updated" : "Contact created"); after?.(saved);
+    },
+    onDelete: existing && (async () => {
+      if (!confirm(`Delete ${existing.first_name} ${existing.last_name}? Their deals are kept.`)) return false;
+      await api("DELETE", `/contacts/${existing.id}`);
+      invalidate(); toast("Contact deleted"); after?.(); return true;
+    }),
+  });
+}
+
+function dealForm(existing, presetCompany, after) {
+  const fillContacts = (form, initial) => {
+    const cid = Number(form.elements.company_id.value);
+    const sel = form.elements.contact_id;
+    const current = initial ? String(existing?.contact_id ?? "") : sel.value;
+    const people = cache.contacts.filter((c) => c.company_id === cid);
+    sel.innerHTML = `<option value="">None</option>` + people.map((c) =>
+      `<option value="${c.id}" ${String(c.id) === current ? "selected" : ""}>${esc(c.first_name + " " + c.last_name)} · ${esc(c.title)}</option>`).join("");
+  };
+  const defaults = { company_id: presetCompany ?? cache.companies[0]?.id, stage: "prospecting", probability: 10,
+    close_date: new Date(Date.now() + 60 * 864e5).toISOString().slice(0, 10) };
+  openForm({
+    title: existing ? "Edit deal" : "New deal",
+    values: existing || defaults,
+    submitLabel: existing ? "Save changes" : "Create deal",
+    fields: [
+      { name: "name", label: "Deal name", required: true, full: true },
+      { name: "company_id", label: "Company", type: "select", int: true, required: true, options: companyOptions(), onChange: fillContacts },
+      { name: "contact_id", label: "Contact", type: "select", int: true, allowEmpty: true, options: [] },
+      { name: "amount_usd", label: "Amount (USD)", type: "number", min: 0, required: true },
+      { name: "probability", label: "Probability (%)", type: "number", min: 0, max: 100, required: true },
+      { name: "stage", label: "Stage", type: "select", required: true, options: STAGES },
+      { name: "close_date", label: "Close date", type: "date", required: true },
+      { name: "owner", label: "Owner", required: true },
+      { name: "product", label: "Product", required: true },
+    ],
+    onSubmit: async (d) => {
+      if (existing && d.stage !== existing.stage && d.probability === existing.probability && (d.stage === "closed_won" || d.stage === "closed_lost")) {
+        delete d.probability; // let the API set 100 / 0
+      }
+      const saved = existing ? await api("PATCH", `/deals/${existing.id}`, d) : await api("POST", "/deals", d);
+      toast(existing ? "Deal updated" : "Deal created"); after?.(saved);
+    },
+    onDelete: existing && (async () => {
+      if (!confirm(`Delete deal "${existing.name}"?`)) return false;
+      await api("DELETE", `/deals/${existing.id}`);
+      toast("Deal deleted"); after?.(); return true;
+    }),
+  });
+}
+
+// ------------------------------------------------------------------ views
+const view = () => $("#view");
+const loading = () => { view().innerHTML = `<div class="loading">Loading…</div>`; };
+
+async function renderDashboard() {
+  loading();
+  const [p, deals] = await Promise.all([api("GET", "/deals/pipeline"), api("GET", "/deals?limit=500"), loadRefs()]);
+  const open = deals.filter((d) => OPEN.has(d.stage));
+  const closed = deals.filter((d) => !OPEN.has(d.stage));
+  const winRate = closed.length ? Math.round(100 * closed.filter((d) => d.stage === "closed_won").length / closed.length) : 0;
+  const max = Math.max(1, ...p.stages.map((s) => s.total_amount_usd));
+  const soon = open.filter((d) => daysUntil(d.close_date) <= 60).sort((a, b) => a.close_date.localeCompare(b.close_date));
+  const owners = {};
+  open.forEach((d) => { owners[d.owner] = (owners[d.owner] || 0) + d.amount_usd; });
+  const ownerRows = Object.entries(owners).sort((a, b) => b[1] - a[1]);
+  const maxOwner = Math.max(1, ...ownerRows.map((o) => o[1]));
+
+  view().innerHTML = `
+    <div class="page-head"><h1>Dashboard</h1>
+      <div class="toolbar"><button class="btn primary" id="new-deal">+ New deal</button></div></div>
+    <div class="kpis">
+      <div class="card kpi"><div class="label">Open pipeline</div><div class="value">${moneyShort(p.open_pipeline_usd)}</div><div class="sub">${open.length} open deals</div></div>
+      <div class="card kpi"><div class="label">Weighted pipeline</div><div class="value">${moneyShort(p.weighted_pipeline_usd)}</div><div class="sub">by deal probability</div></div>
+      <div class="card kpi"><div class="label">Closed won</div><div class="value">${moneyShort(p.won_usd)}</div><div class="sub">${deals.filter((d) => d.stage === "closed_won").length} deals</div></div>
+      <div class="card kpi"><div class="label">Win rate</div><div class="value">${winRate}%</div><div class="sub">of ${closed.length} closed deals</div></div>
+    </div>
+    <div class="grid-2">
+      <div class="card"><h2>Pipeline by stage</h2><div class="body">
+        ${p.stages.map((s) => `<div class="stage-row">
+          <div>${stagePill(s.stage)}</div>
+          <div class="bar"><span style="width:${(100 * s.total_amount_usd / max).toFixed(1)}%;background:var(--s-${s.stage})"></span></div>
+          <div class="amt">${moneyShort(s.total_amount_usd)} <span class="cnt">· ${s.count}</span></div></div>`).join("")}
+      </div></div>
+      <div class="card"><h2>Open pipeline by owner</h2><div class="body">
+        ${ownerRows.map(([o, amt]) => `<div class="stage-row">
+          <div class="strong">${esc(o)}</div>
+          <div class="bar"><span style="width:${(100 * amt / maxOwner).toFixed(1)}%;background:var(--accent)"></span></div>
+          <div class="amt">${moneyShort(amt)}</div></div>`).join("") || `<div class="empty">No open deals</div>`}
+      </div></div>
+    </div>
+    <div class="card" style="margin-top:16px"><h2>Closing in the next 60 days</h2>
+      ${soon.length ? `<div class="table-wrap"><table><thead><tr><th>Deal</th><th>Company</th><th>Stage</th><th class="num">Amount</th><th>Close date</th><th>Owner</th></tr></thead><tbody>
+        ${soon.map((d) => { const n = daysUntil(d.close_date); return `<tr data-deal="${d.id}">
+          <td><span class="strong">${esc(d.name)}</span></td><td>${esc(companyName(d.company_id))}</td><td>${stagePill(d.stage)}</td>
+          <td class="num">${money(d.amount_usd)}</td>
+          <td>${fmtDate(d.close_date)} <span class="faint">${n < 0 ? `${-n}d overdue` : n === 0 ? "today" : `in ${n}d`}</span></td>
+          <td>${esc(d.owner)}</td></tr>`; }).join("")}</tbody></table></div>` : `<div class="empty">Nothing closing in the next 60 days.</div>`}
+    </div>`;
+  $("#new-deal").onclick = () => dealForm(null, null, renderDashboard);
+  view().querySelectorAll("[data-deal]").forEach((tr) => tr.onclick = () =>
+    dealForm(deals.find((d) => d.id === Number(tr.dataset.deal)), null, renderDashboard));
+}
+
+const dealsState = { q: "", owner: "", mode: store.get("crm_deals_mode") || "board" };
+
+async function renderDeals() {
+  loading();
+  const [deals] = await Promise.all([api("GET", "/deals?limit=500"), loadRefs()]);
+  const owners = [...new Set(deals.map((d) => d.owner))].sort();
+  const filtered = () => deals.filter((d) =>
+    (!dealsState.owner || d.owner === dealsState.owner) &&
+    (!dealsState.q || (d.name + " " + d.product + " " + companyName(d.company_id)).toLowerCase().includes(dealsState.q.toLowerCase())));
+
+  view().innerHTML = `
+    <div class="page-head"><h1>Deals</h1>
+      <div class="toolbar">
+        <input type="search" id="q" placeholder="Search deals or companies" value="${esc(dealsState.q)}">
+        <select id="owner"><option value="">All owners</option>${owners.map((o) => `<option ${o === dealsState.owner ? "selected" : ""}>${esc(o)}</option>`).join("")}</select>
+        <button class="btn" id="mode">${dealsState.mode === "board" ? "Table view" : "Board view"}</button>
+        <button class="btn primary" id="new">+ New deal</button>
+      </div></div>
+    <div id="deals-body"></div>`;
+
+  const body = $("#deals-body");
+  const draw = () => {
+    const rows = filtered();
+    if (dealsState.mode === "board") {
+      body.innerHTML = `<div class="board">${STAGES.map(([s, label]) => {
+        const inCol = rows.filter((d) => d.stage === s);
+        return `<div class="col" data-stage="${s}">
+          <div class="col-head"><span class="t"><span class="dot" style="background:var(--s-${s})"></span>${label}</span>
+            <span class="s">${inCol.length} · ${moneyShort(inCol.reduce((a, d) => a + d.amount_usd, 0))}</span></div>
+          ${inCol.map((d) => `<div class="deal-card" draggable="true" data-deal="${d.id}">
+            <div class="n">${esc(d.name)}</div>
+            <div class="meta"><span>${esc(companyName(d.company_id))}</span><span class="amt">${moneyShort(d.amount_usd)}</span></div>
+            <div class="meta" style="margin-top:3px"><span>${esc(d.owner)}</span><span>${fmtDate(d.close_date)}</span></div></div>`).join("")}
+        </div>`; }).join("")}</div>
+        <p class="muted" style="margin-top:10px;font-size:12.5px">Drag a card to another column to change its stage.</p>`;
+      wireBoard();
+    } else {
+      body.innerHTML = `<div class="card table-wrap">${rows.length ? `<table><thead><tr><th>Deal</th><th>Company</th><th>Contact</th><th>Stage</th>
+        <th class="num">Amount</th><th class="num">Prob.</th><th>Close date</th><th>Owner</th></tr></thead><tbody>
+        ${rows.map((d) => `<tr data-deal="${d.id}"><td><span class="strong">${esc(d.name)}</span><div class="faint">${esc(d.product)}</div></td>
+          <td>${esc(companyName(d.company_id))}</td><td>${esc(contactName(d.contact_id))}</td><td>${stagePill(d.stage)}</td>
+          <td class="num">${money(d.amount_usd)}</td><td class="num">${d.probability}%</td><td>${fmtDate(d.close_date)}</td><td>${esc(d.owner)}</td></tr>`).join("")}
+        </tbody></table>` : `<div class="empty">No deals match.</div>`}</div>`;
+    }
+    body.querySelectorAll("[data-deal]").forEach((el) => el.addEventListener("click", () =>
+      dealForm(deals.find((d) => d.id === Number(el.dataset.deal)), null, renderDeals)));
+  };
+
+  const wireBoard = () => {
+    let dragId = null;
+    body.querySelectorAll(".deal-card").forEach((c) => {
+      c.addEventListener("dragstart", (e) => { dragId = Number(c.dataset.deal); c.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; });
+      c.addEventListener("dragend", () => c.classList.remove("dragging"));
+    });
+    body.querySelectorAll(".col").forEach((col) => {
+      col.addEventListener("dragover", (e) => { e.preventDefault(); col.classList.add("drop"); });
+      col.addEventListener("dragleave", (e) => { if (!col.contains(e.relatedTarget)) col.classList.remove("drop"); });
+      col.addEventListener("drop", async (e) => {
+        e.preventDefault(); col.classList.remove("drop");
+        const deal = deals.find((d) => d.id === dragId); const stage = col.dataset.stage;
+        if (!deal || deal.stage === stage) return;
+        const prev = { ...deal };
+        Object.assign(deal, { stage }); draw();
+        try { Object.assign(deal, await api("PATCH", `/deals/${deal.id}`, { stage })); draw(); toast(`Moved to ${STAGE_LABEL[stage]}`); }
+        catch (err) { Object.assign(deal, prev); draw(); if (err.status !== 401) toast(err.message, true); }
+      });
+    });
+  };
+
+  $("#q").oninput = (e) => { dealsState.q = e.target.value; draw(); };
+  $("#owner").onchange = (e) => { dealsState.owner = e.target.value; draw(); };
+  $("#mode").onclick = () => { dealsState.mode = dealsState.mode === "board" ? "table" : "board"; store.set("crm_deals_mode", dealsState.mode); renderDeals(); };
+  $("#new").onclick = () => dealForm(null, null, renderDeals);
+  draw();
+}
+
+const compState = { q: "", industry: "" };
+
+async function renderCompanies() {
+  loading();
+  const [deals] = await Promise.all([api("GET", "/deals?limit=500"), loadRefs(true)]);
+  const companies = cache.companies;
+  const industries = [...new Set(companies.map((c) => c.industry))].sort();
+  const stats = Object.fromEntries(companies.map((c) => {
+    const ds = deals.filter((d) => d.company_id === c.id);
+    return [c.id, { open: ds.filter((d) => OPEN.has(d.stage)).reduce((a, d) => a + d.amount_usd, 0),
+      contacts: cache.contacts.filter((p) => p.company_id === c.id).length, deals: ds.length }];
+  }));
+  view().innerHTML = `
+    <div class="page-head"><h1>Companies</h1>
+      <div class="toolbar">
+        <input type="search" id="q" placeholder="Search companies" value="${esc(compState.q)}">
+        <select id="ind"><option value="">All industries</option>${industries.map((i) => `<option ${i === compState.industry ? "selected" : ""}>${esc(i)}</option>`).join("")}</select>
+        <button class="btn primary" id="new">+ New company</button>
+      </div></div>
+    <div class="card table-wrap" id="tbl"></div>`;
+  const draw = () => {
+    const q = compState.q.toLowerCase();
+    const rows = companies.filter((c) => (!compState.industry || c.industry === compState.industry) &&
+      (!q || (c.name + " " + c.domain + " " + c.hq_city + " " + c.country).toLowerCase().includes(q)));
+    $("#tbl").innerHTML = rows.length ? `<table><thead><tr><th>Company</th><th>Industry</th><th>HQ</th><th class="num">Employees</th>
+      <th class="num">Revenue</th><th class="num">Contacts</th><th class="num">Open pipeline</th></tr></thead><tbody>
+      ${rows.map((c) => `<tr data-id="${c.id}"><td><span class="strong">${esc(c.name)}</span><div class="faint">${esc(c.domain)}</div></td>
+        <td>${esc(c.industry)}</td><td>${esc(c.hq_city)}, ${esc(c.country)}</td><td class="num">${c.employees.toLocaleString()}</td>
+        <td class="num">${moneyShort(c.annual_revenue_usd)}</td><td class="num">${stats[c.id].contacts}</td>
+        <td class="num">${stats[c.id].open ? money(stats[c.id].open) : `<span class="faint">—</span>`}</td></tr>`).join("")}
+      </tbody></table>` : `<div class="empty">No companies match.</div>`;
+    $("#tbl").querySelectorAll("tr[data-id]").forEach((tr) => tr.onclick = () => { location.hash = `#/companies/${tr.dataset.id}`; });
+  };
+  $("#q").oninput = (e) => { compState.q = e.target.value; draw(); };
+  $("#ind").onchange = (e) => { compState.industry = e.target.value; draw(); };
+  $("#new").onclick = () => companyForm(null, (c) => { location.hash = `#/companies/${c.id}`; });
+  draw();
+}
+
+async function renderCompany(id) {
+  loading();
+  const [c, people, deals] = await Promise.all([
+    api("GET", `/companies/${id}`), api("GET", `/companies/${id}/contacts`), api("GET", `/companies/${id}/deals`), loadRefs()]);
+  const open = deals.filter((d) => OPEN.has(d.stage));
+  const won = deals.filter((d) => d.stage === "closed_won");
+  const rerender = () => renderCompany(id);
+  view().innerHTML = `
+    <a class="back" href="#/companies">← Companies</a>
+    <div class="detail-head"><div><h1>${esc(c.name)}</h1>
+      <div class="muted">${esc(c.industry)} · <a href="https://${esc(c.domain)}" target="_blank" rel="noopener noreferrer">${esc(c.domain)}</a></div></div>
+      <div class="toolbar"><button class="btn" id="edit">Edit</button><button class="btn" id="add-contact">+ Contact</button>
+        <button class="btn primary" id="add-deal">+ Deal</button></div></div>
+    ${c.description ? `<p style="margin:-4px 0 16px;max-width:760px">${esc(c.description)}</p>` : ""}
+    <div class="facts">
+      <div><div class="label">Headquarters</div><div class="v">${esc(c.hq_city)}, ${esc(c.country)}</div></div>
+      <div><div class="label">Employees</div><div class="v">${c.employees.toLocaleString()}</div></div>
+      <div><div class="label">Annual revenue</div><div class="v">${money(c.annual_revenue_usd)}</div></div>
+      <div><div class="label">Open pipeline · Won</div><div class="v">${moneyShort(open.reduce((a, d) => a + d.amount_usd, 0))} · ${moneyShort(won.reduce((a, d) => a + d.amount_usd, 0))}</div></div>
+    </div>
+    <div class="grid-2">
+      <div class="card"><h2>Deals (${deals.length})</h2>
+        ${deals.length ? `<div class="table-wrap"><table><thead><tr><th>Deal</th><th>Stage</th><th class="num">Amount</th><th>Close</th></tr></thead><tbody>
+          ${deals.map((d) => `<tr data-deal="${d.id}"><td><span class="strong">${esc(d.name.replace(c.name + " - ", ""))}</span><div class="faint">${esc(d.owner)}${d.contact_id ? " · " + esc(contactName(d.contact_id)) : ""}</div></td>
+            <td>${stagePill(d.stage)}</td><td class="num">${money(d.amount_usd)}</td><td>${fmtDate(d.close_date)}</td></tr>`).join("")}
+        </tbody></table></div>` : `<div class="empty">No deals yet.</div>`}</div>
+      <div class="card"><h2>Contacts (${people.length})</h2>
+        ${people.length ? `<div class="table-wrap"><table><tbody>
+          ${people.map((p) => `<tr data-contact="${p.id}"><td><span class="strong">${esc(p.first_name)} ${esc(p.last_name)}</span><div class="faint">${esc(p.title)}</div></td>
+            <td><a href="mailto:${esc(p.email)}" onclick="event.stopPropagation()">${esc(p.email)}</a><div class="faint">${esc(p.phone)}</div></td></tr>`).join("")}
+        </tbody></table></div>` : `<div class="empty">No contacts yet.</div>`}</div>
+    </div>`;
+  $("#edit").onclick = () => companyForm(c, rerender);
+  $("#add-contact").onclick = () => contactForm(null, c.id, rerender);
+  $("#add-deal").onclick = () => dealForm(null, c.id, rerender);
+  view().querySelectorAll("[data-deal]").forEach((tr) => tr.onclick = () => dealForm(deals.find((d) => d.id === Number(tr.dataset.deal)), null, rerender));
+  view().querySelectorAll("[data-contact]").forEach((tr) => tr.onclick = () => contactForm(people.find((p) => p.id === Number(tr.dataset.contact)), null, rerender));
+}
+
+const contactState = { q: "", company: "" };
+
+async function renderContacts() {
+  loading();
+  await loadRefs(true);
+  const people = cache.contacts;
+  view().innerHTML = `
+    <div class="page-head"><h1>Contacts</h1>
+      <div class="toolbar">
+        <input type="search" id="q" placeholder="Search name, email or title" value="${esc(contactState.q)}">
+        <select id="co"><option value="">All companies</option>${companyOptions().map(([id, n]) => `<option value="${id}" ${String(id) === contactState.company ? "selected" : ""}>${esc(n)}</option>`).join("")}</select>
+        <button class="btn primary" id="new">+ New contact</button>
+      </div></div>
+    <div class="card table-wrap" id="tbl"></div>`;
+  const draw = () => {
+    const q = contactState.q.toLowerCase();
+    const rows = people.filter((p) => (!contactState.company || String(p.company_id) === contactState.company) &&
+      (!q || `${p.first_name} ${p.last_name} ${p.email} ${p.title}`.toLowerCase().includes(q)));
+    $("#tbl").innerHTML = rows.length ? `<table><thead><tr><th>Name</th><th>Title</th><th>Company</th><th>Email</th><th>Phone</th></tr></thead><tbody>
+      ${rows.map((p) => `<tr data-id="${p.id}"><td><span class="strong">${esc(p.first_name)} ${esc(p.last_name)}</span></td><td>${esc(p.title)}</td>
+        <td><a href="#/companies/${p.company_id}" onclick="event.stopPropagation()">${esc(companyName(p.company_id))}</a></td>
+        <td><a href="mailto:${esc(p.email)}" onclick="event.stopPropagation()">${esc(p.email)}</a></td><td>${esc(p.phone)}</td></tr>`).join("")}
+      </tbody></table>` : `<div class="empty">No contacts match.</div>`;
+    $("#tbl").querySelectorAll("tr[data-id]").forEach((tr) => tr.onclick = () =>
+      contactForm(people.find((p) => p.id === Number(tr.dataset.id)), null, renderContacts));
+  };
+  $("#q").oninput = (e) => { contactState.q = e.target.value; draw(); };
+  $("#co").onchange = (e) => { contactState.company = e.target.value; draw(); };
+  $("#new").onclick = () => contactForm(null, contactState.company ? Number(contactState.company) : null, renderContacts);
+  draw();
+}
+
+// ------------------------------------------------------------------ router
+async function route() {
+  if (apiKey === null) return;
+  const [, tab = "dashboard", id] = (location.hash || "#/dashboard").split("/");
+  document.querySelectorAll("#tabs a").forEach((a) => a.classList.toggle("active", a.dataset.tab === tab));
+  try {
+    if (tab === "deals") await renderDeals();
+    else if (tab === "companies" && id) await renderCompany(Number(id));
+    else if (tab === "companies") await renderCompanies();
+    else if (tab === "contacts") await renderContacts();
+    else await renderDashboard();
+    window.scrollTo(0, 0);
+  } catch (e) {
+    if (e.status === 401) return;
+    view().innerHTML = `<div class="card"><div class="empty">${e.status === 404 ? "Not found." : "Couldn't load this page: " + esc(e.message)}
+      <div style="margin-top:12px"><button class="btn" onclick="route()">Try again</button></div></div></div>`;
+  }
+}
+window.addEventListener("hashchange", route);
+
+function start() {
+  $("#login").classList.add("hidden"); $("#shell").classList.remove("hidden");
+  route();
+}
+
+(async function boot() {
+  const saved = store.get(KEY_STORE);
+  // An open server (no API_KEY configured) works without a key.
+  try {
+    if (saved && await tryKey(saved)) { apiKey = saved; return start(); }
+    if (await tryKey("")) { apiKey = ""; $("#signout-btn").classList.add("hidden"); return start(); }
+  } catch {}
+  showLogin();
+})();
+</script>
+</body>
+</html>

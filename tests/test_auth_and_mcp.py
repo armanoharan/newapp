@@ -61,3 +61,9 @@ def test_mcp_over_http(secured):
 def test_mcp_rejects_unknown_host(secured):
     h = {**MCP_HEADERS, "X-API-Key": KEY, "host": "evil.example.com"}
     assert secured.post("/mcp", headers=h, json=rpc("tools/list")).status_code == 421
+
+
+def test_ui_is_public_but_data_is_not(secured):
+    page = secured.get("/")
+    assert page.status_code == 200 and "<title>B2B CRM</title>" in page.text
+    assert secured.get("/deals").status_code == 401
