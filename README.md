@@ -18,7 +18,18 @@ tests/        API tests
 
 ## Setup
 
+Requires Python 3.10+. The quickest way (macOS/Linux):
+
 ```bash
+./setup.sh
+```
+
+This finds Python 3.10+ (installing 3.12 with Homebrew if needed), creates `.venv`, installs dependencies and starts the API at http://localhost:8000/docs.
+
+Manual setup:
+
+```bash
+python3.12 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
